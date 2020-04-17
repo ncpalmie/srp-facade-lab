@@ -7,7 +7,6 @@ public class SimpleGameEngine implements IGameEngine {
 
     private List<IEnemy> enemies;
     private List<RpgPlayer> players;
-    private final ItemHandler itemHandler;
 
     public SimpleGameEngine(){
         enemies = new ArrayList<IEnemy>();
@@ -15,7 +14,6 @@ public class SimpleGameEngine implements IGameEngine {
         enemies.add(new SimpleEnemy("Zombie"));
         enemies.add(new SimpleEnemy("Golem"));
         players = new ArrayList<RpgPlayer>();
-        itemHandler = new ItemHandler();
     }
 
     public void addPlayer(RpgPlayer player){
