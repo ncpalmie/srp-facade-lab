@@ -62,6 +62,9 @@ public class RpgPlayer {
         if (item.isRare())
             gameEngine.playSpecialEffect("cool_swirly_particles");
 
+        if (item.isRare() && item.isUnique())
+            gameEngine.playSpecialEffect("blue_swirly");
+
         inventory.add(item);
 
         calculateStats();
@@ -92,6 +95,9 @@ public class RpgPlayer {
     }
 
     public void takeDamage(int damage) {
+        if (this.calculateInventoryWeight() < this.getCarryingCapacity() * 0.5)
+            damage = (int)Math.round(damage * 0.75); 
+
         if (damage < armour) {
             gameEngine.playSpecialEffect("parry");
         }
