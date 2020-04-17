@@ -8,6 +8,8 @@ public class RpgPlayer {
     public static final int MAX_CARRYING_CAPACITY = 1000;
 
     private final IGameEngine gameEngine;
+    
+    private final ItemFacade itemFacade;
 
     private int health;
 
@@ -23,49 +25,37 @@ public class RpgPlayer {
     public RpgPlayer(IGameEngine gameEngine) {
         this.gameEngine = gameEngine;
         inventory = new ArrayList<Item>();
+        itemFacade = new ItemFacade();
         carryingCapacity = MAX_CARRYING_CAPACITY;
     }
 
-    public void useItem(Item item) {
-        if (item.getName().equals("Stink Bomb"))
-        {
-            List<IEnemy> enemies = gameEngine.getEnemiesNear(this);
-
-            for (IEnemy enemy: enemies){
-                enemy.takeDamage(100);
-            }
-        }
+    public void useItem(Item item, IGameEngine gameEngine) {
+        itemFacade.useItem(item, gameEngine, this);
     }
 
     public boolean pickUpItem(Item item) {
+        int itemHeal;
         int weight = calculateInventoryWeight();
-        if (weight + item.getWeight() > carryingCapacity)
+        if (weight + itemFacade.getItemWeight(item) > carryingCapacity)
             return false;
 
-        if (item.isUnique() && checkIfItemExistsInInventory(item))
+        if (itemFacade.isItemUnique(item) && checkIfItemExistsInInventory(item))
             return false;
 
-        // Don't pick up items that give health, just consume them.
-        if (item.getHeal() > 0) {
-            health += item.getHeal();
+        itemHeal = itemFacade.pickUpItem(item, gameEngine);
+
+        if (itemHeal > 0) {
+            health += itemHeal;
 
             if (health > maxHealth)
                 health = maxHealth;
 
-            if (item.getHeal() > 500) {
-                gameEngine.playSpecialEffect("green_swirly");
-            }
-
             return true;
         }
 
-        if (item.isRare())
-            gameEngine.playSpecialEffect("cool_swirly_particles");
-
-        if (item.isRare() && item.isUnique())
-            gameEngine.playSpecialEffect("blue_swirly");
-
-        inventory.add(item);
+        // Don't pick up items that give health, just consume them.
+        if (itemHeal == 0)
+            inventory.add(item);
 
         calculateStats();
 
