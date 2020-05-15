@@ -8,8 +8,6 @@ public class RpgPlayer {
     public static final int MAX_CARRYING_CAPACITY = 1000;
 
     private final IGameEngine gameEngine;
-    
-    private final ItemFacade itemFacade;
 
     private int health;
 
@@ -25,37 +23,46 @@ public class RpgPlayer {
     public RpgPlayer(IGameEngine gameEngine) {
         this.gameEngine = gameEngine;
         inventory = new ArrayList<Item>();
-        itemFacade = new ItemFacade();
         carryingCapacity = MAX_CARRYING_CAPACITY;
     }
 
-    public void useItem(Item item, IGameEngine gameEngine) {
-        itemFacade.useItem(item, gameEngine, this);
+    public void useItem(Item item) {
+        if (item.getName().equals("Stink Bomb"))
+        {
+            List<IEnemy> enemies = gameEngine.getEnemiesNear(this);
+
+            for (IEnemy enemy: enemies){
+                enemy.takeDamage(100);
+            }
+        }
     }
 
     public boolean pickUpItem(Item item) {
-        int itemHeal;
         int weight = calculateInventoryWeight();
-        if (weight + itemFacade.getItemWeight(item) > carryingCapacity)
+        if (weight + item.getWeight() > carryingCapacity)
             return false;
 
-        if (itemFacade.isItemUnique(item) && checkIfItemExistsInInventory(item))
+        if (item.isUnique() && checkIfItemExistsInInventory(item))
             return false;
 
-        itemHeal = itemFacade.pickUpItem(item, gameEngine);
-
-        if (itemHeal > 0) {
-            health += itemHeal;
+        // Don't pick up items that give health, just consume them.
+        if (item.getHeal() > 0) {
+            health += item.getHeal();
 
             if (health > maxHealth)
                 health = maxHealth;
 
+            if (item.getHeal() > 500) {
+                gameEngine.playSpecialEffect("green_swirly");
+            }
+
             return true;
         }
 
-        // Don't pick up items that give health, just consume them.
-        if (itemHeal == 0)
-            inventory.add(item);
+        if (item.isRare())
+            gameEngine.playSpecialEffect("cool_swirly_particles");
+
+        inventory.add(item);
 
         calculateStats();
 
@@ -85,9 +92,6 @@ public class RpgPlayer {
     }
 
     public void takeDamage(int damage) {
-        if (this.calculateInventoryWeight() < this.getCarryingCapacity() * 0.5)
-            damage = (int)Math.round(damage * 0.75); 
-
         if (damage < armour) {
             gameEngine.playSpecialEffect("parry");
         }
